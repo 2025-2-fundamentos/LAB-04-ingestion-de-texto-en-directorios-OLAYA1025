@@ -71,3 +71,52 @@ def pregunta_01():
 
 
     """
+    import zipfile
+    import os
+    import pandas as pd
+    from pathlib import Path
+
+    # Descomprimir el archivo input.zip
+    zip_path = "files/input.zip"
+    extract_path = "files"
+
+    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        zip_ref.extractall(extract_path)
+
+    # Función para procesar un directorio (train o test)
+    def process_directory(base_path):
+        data = []
+
+        # Iterar sobre los sentimientos (negative, positive, neutral)
+        for sentiment in ['negative', 'positive', 'neutral']:
+            sentiment_path = os.path.join(base_path, sentiment)
+
+            if os.path.exists(sentiment_path):
+                # Leer todos los archivos .txt en el directorio
+                for filename in os.listdir(sentiment_path):
+                    if filename.endswith('.txt'):
+                        file_path = os.path.join(sentiment_path, filename)
+
+                        # Leer el contenido del archivo
+                        with open(file_path, 'r', encoding='utf-8') as f:
+                            phrase = f.read().strip()
+
+                        # Agregar a la lista de datos
+                        data.append({
+                            'phrase': phrase,
+                            'target': sentiment
+                        })
+
+        return pd.DataFrame(data)
+
+    # Procesar train y test
+    train_df = process_directory(os.path.join(extract_path, 'input', 'train'))
+    test_df = process_directory(os.path.join(extract_path, 'input', 'test'))
+
+    # Crear el directorio de salida si no existe
+    output_path = "files/output"
+    os.makedirs(output_path, exist_ok=True)
+
+    # Guardar los archivos CSV
+    train_df.to_csv(os.path.join(output_path, 'train_dataset.csv'), index=False)
+    test_df.to_csv(os.path.join(output_path, 'test_dataset.csv'), index=False)
